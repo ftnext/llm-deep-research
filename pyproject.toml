@@ -1,0 +1,28 @@
+[project]
+name = "llm-deep-research"
+version = "0.1"
+description = ""
+readme = "README.md"
+authors = [{name = "nikkie"}]
+license = "Apache-2.0"
+classifiers = []
+requires-python = ">=3.9"
+dependencies = [
+    "llm"
+]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project.urls]
+Homepage = "https://github.com/ftnext/llm-deep-research"
+Changelog = "https://github.com/ftnext/llm-deep-research/releases"
+Issues = "https://github.com/ftnext/llm-deep-research/issues"
+CI = "https://github.com/ftnext/llm-deep-research/actions"
+
+[project.entry-points.llm]
+deep_research = "llm_deep_research"
+
+[project.optional-dependencies]
+test = ["pytest"]
