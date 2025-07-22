@@ -15,21 +15,29 @@ llm install llm-deep-research
 ```
 ## Usage
 
-Usage instructions go here.
+### GenAI Processors' research
+
+https://github.com/google-gemini/genai-processors/tree/main/examples/research
+
+```
+export LLM_GEMINI_KEY=your_api_key_here
+
+llm -m genai-processors-research 'Research the best things about owning dalmatians!'
+```
+
+Also supports `--async`.
 
 ## Development
 
 To set up this plugin locally, first checkout the code. Then create a new virtual environment:
 ```bash
 cd llm-deep-research
-python -m venv venv
-source venv/bin/activate
 ```
-Now install the dependencies and test dependencies:
+Now create a new virtual environment and install the dependencies and test dependencies:
 ```bash
-python -m pip install -e '.[test]'
+uv sync --extra test
 ```
 To run the tests:
 ```bash
-python -m pytest
+uv run pytest
 ```
