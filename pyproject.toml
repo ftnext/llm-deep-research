@@ -6,9 +6,10 @@ readme = "README.md"
 authors = [{name = "nikkie"}]
 license = "Apache-2.0"
 classifiers = []
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 dependencies = [
-    "llm"
+    "genai-processors>=1.0.5",
+    "llm",
 ]
 
 [build-system]
