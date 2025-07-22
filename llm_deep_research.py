@@ -43,6 +43,35 @@ class GenAIProcessorsResearch(llm.KeyModel):
         )
 
 
+class GenAIProcessorsAsyncResearch(llm.AsyncKeyModel):
+    model_id = "genai-processors-research"
+    needs_key = "gemini"
+    key_env_var = "LLM_GEMINI_KEY"
+    can_stream = True
+
+    async def execute(self, prompt, stream, response, conversation, key):
+        async for part in self._execute(prompt.prompt, key):
+            if part.substream_name == "status":
+                yield f"--- \n *Status*: {part.text}"
+            else:
+                try:
+                    yield part.text
+                except Exception:
+                    yield f" {part.text} "
+
+    async def _execute(self, query, key):
+        input_stream = streams.stream_content([ProcessorPart(query)])
+
+        output_parts = content_api.ProcessorContent()
+        async for content_part in ResearchAgent(api_key=key)(input_stream):
+            if content_part.substream_name == "status":
+                yield content_part
+            output_parts += content_part
+        yield ProcessorPart(f"""# Final synthesized research
+
+  {content_api.as_text(output_parts, substream_name="")}""")
+
+
 @llm.hookimpl
 def register_models(register):
-    register(GenAIProcessorsResearch())
+    register(GenAIProcessorsResearch(), GenAIProcessorsAsyncResearch())
