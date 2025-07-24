@@ -62,8 +62,9 @@ class GenAIProcessorsAsyncResearch(llm.AsyncKeyModel):
     async def _execute(self, query, key):
         input_stream = streams.stream_content([ProcessorPart(query)])
 
+        researcher = ResearchAgent(api_key=key)
         output_parts = content_api.ProcessorContent()
-        async for content_part in ResearchAgent(api_key=key)(input_stream):
+        async for content_part in researcher(input_stream):
             if content_part.substream_name == "status":
                 yield content_part
             output_parts += content_part
