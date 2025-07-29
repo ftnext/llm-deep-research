@@ -5,6 +5,26 @@ import llm
 from genai_processors import content_api, streams
 from genai_processors.examples.research import ResearchAgent
 from genai_processors.processor import ProcessorPart
+from opentelemetry._events import set_event_logger_provider
+from opentelemetry._logs import get_logger_provider, set_logger_provider
+from opentelemetry.instrumentation.google_genai import GoogleGenAiSdkInstrumentor
+from opentelemetry.sdk._events import EventLoggerProvider
+from opentelemetry.sdk._logs import LoggerProvider
+from opentelemetry.sdk._logs.export import BatchLogRecordProcessor, ConsoleLogExporter
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
+from opentelemetry.trace import get_tracer_provider, set_tracer_provider
+
+set_tracer_provider(TracerProvider())
+get_tracer_provider().add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
+
+set_logger_provider(LoggerProvider())
+get_logger_provider().add_log_record_processor(
+    BatchLogRecordProcessor(ConsoleLogExporter())
+)
+set_event_logger_provider(EventLoggerProvider())
+
+GoogleGenAiSdkInstrumentor().instrument()
 
 
 def render_part(part: ProcessorPart) -> None:
