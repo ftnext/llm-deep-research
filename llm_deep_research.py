@@ -1,5 +1,8 @@
 import asyncio
+import os
 import sys
+import time
+from datetime import datetime
 
 import llm
 from genai_processors import content_api, streams
@@ -14,17 +17,6 @@ from opentelemetry.sdk._logs.export import BatchLogRecordProcessor, ConsoleLogEx
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
 from opentelemetry.trace import get_tracer_provider, set_tracer_provider
-
-set_tracer_provider(TracerProvider())
-get_tracer_provider().add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
-
-set_logger_provider(LoggerProvider())
-get_logger_provider().add_log_record_processor(
-    BatchLogRecordProcessor(ConsoleLogExporter())
-)
-set_event_logger_provider(EventLoggerProvider())
-
-GoogleGenAiSdkInstrumentor().instrument()
 
 
 def render_part(part: ProcessorPart) -> None:
@@ -45,8 +37,31 @@ class GenAIProcessorsResearch(llm.KeyModel):
     key_env_var = "LLM_GEMINI_KEY"
 
     def execute(self, prompt, stream, response, conversation, key):
-        asyncio.run(self._execute(prompt.prompt, key))
-        return ""
+        os.environ["OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT"] = "true"
+
+        tracing_dir = llm.user_dir() / self.model_id
+        tracing_dir.mkdir(exist_ok=True)
+
+        tracing_file = (
+            tracing_dir / f"trace-{datetime.now().strftime('%Y%m%d-%H%M%S')}.jsonl"
+        )
+        with tracing_file.open("w") as out:
+            set_tracer_provider(TracerProvider())
+            get_tracer_provider().add_span_processor(
+                BatchSpanProcessor(ConsoleSpanExporter(out=out))
+            )
+
+            set_logger_provider(LoggerProvider())
+            get_logger_provider().add_log_record_processor(
+                BatchLogRecordProcessor(ConsoleLogExporter(out=out))
+            )
+            set_event_logger_provider(EventLoggerProvider())
+
+            GoogleGenAiSdkInstrumentor().instrument()
+
+            asyncio.run(self._execute(prompt.prompt, key))
+            time.sleep(5)  # Allow time for any final logs to be flushed
+            return ""
 
     async def _execute(self, query, key):
         input_stream = streams.stream_content([ProcessorPart(query)])
